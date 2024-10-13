@@ -23,6 +23,7 @@ members = [
     "src/lib/world",
     "src/lib/derive_macros",
     "src/lib/adapters/nbt", "src/lib/adapters/mca",
+    "src/lib/commands",
     "src/tests",
 ]
 
