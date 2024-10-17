@@ -1,5 +1,6 @@
 use std::{any::Any, future::Future, pin::Pin, sync::Arc};
 use std::sync::Mutex;
+use tracing::error;
 
 pub mod parser;
 
@@ -60,20 +61,26 @@ impl<S> Command<S> {
 }
 
 impl<S> CommandContext<S> {
-    pub fn arg<T: Any>(&self, name: &str) -> Result<T, String> {
+    pub fn arg<T: Any>(&self, name: &str) -> Option<T> {
         if let Some(arg) = self.command.args.iter().find(|a| a.name == name) {
             let input = self.input.clone();
             let result = arg.parser.parse(Arc::new(self), input);
 
             return match result {
                 Ok(b) => match b.downcast::<T>() {
-                    Ok(value) => Ok(*value),
-                    Err(_) => Err("Failed to downcast".to_string()),
+                    Ok(value) => Some(*value),
+                    Err(_) => {
+                        error!("failed downcasting command argument");
+                        None
+                    },
                 },
-                Err(err) => Err(err),
+                Err(err) => {
+                    error!("command arg parser failed: {err}");
+                    None
+                },
             };
         } else {
-            Err(format!("Argument '{}' not found.", name))
+            None
         }
     }
 }
