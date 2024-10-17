@@ -84,7 +84,6 @@ impl<S> CommandContext<S> {
         }
     }
 }
-
 pub trait ArgumentParser<S>: Send + Sync {
     fn parse(&self, context: Arc<&CommandContext<S>>, input: Arc<Mutex<CommandInput>>) -> ParserResult;
     fn new() -> Self
