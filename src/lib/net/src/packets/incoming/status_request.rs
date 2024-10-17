@@ -3,7 +3,8 @@ use ferrumc_config::get_global_config;
 use ferrumc_macros::{packet, NetDecode};
 use ferrumc_net_codec::encode::NetEncodeOpts;
 use crate::packets::IncomingPacket;
-use crate::{NetResult, ServerState};
+use crate::NetResult;
+use ferrumc_state::ServerState;
 use crate::connection::StreamWriter;
 use crate::packets::outgoing::status_response::StatusResponse;
 

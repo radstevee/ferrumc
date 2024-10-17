@@ -3,7 +3,7 @@ use ferrumc_macros::event_handler;
 use ferrumc_net::connection::ConnectionState;
 use ferrumc_net::errors::{NetError, PacketError};
 use ferrumc_net::errors::NetError::Packet;
-use ferrumc_net::GlobalState;
+use ferrumc_state::GlobalState;
 use ferrumc_net::packets::incoming::handshake::{HandshakeEvent};
 
 #[event_handler]

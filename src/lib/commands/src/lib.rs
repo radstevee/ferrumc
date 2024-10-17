@@ -80,6 +80,7 @@ impl<S> CommandContext<S> {
                 },
             };
         } else {
+            error!("command arg not found: {name}");
             None
         }
     }

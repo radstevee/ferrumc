@@ -1,7 +1,7 @@
 use ferrumc_macros::event_handler;
 use ferrumc_net::errors::NetError;
 use ferrumc_net::packets::incoming::login_start::LoginStartEvent;
-use ferrumc_net::GlobalState;
+use ferrumc_state::GlobalState;
 use tracing::info;
 
 #[event_handler]

@@ -117,7 +117,7 @@ pub(crate) fn derive(input: TokenStream) -> TokenStream {
 
     // Check if I'm local or external (ferrumc_net)
     let found_crate = crate_name("ferrumc-net").unwrap();
-
+    
     let net_crate = match found_crate {
         FoundCrate::Itself => {
             quote! {crate}
@@ -130,7 +130,7 @@ pub(crate) fn derive(input: TokenStream) -> TokenStream {
     let output = quote! {
         impl ::ferrumc_events::infrastructure::Event for #name {
             type Data = Self;
-            type State = #net_crate::GlobalState;
+            type State = ::ferrumc_state::GlobalState;
             type Error = #net_crate::errors::NetError;
 
             fn name() -> &'static str {

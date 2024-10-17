@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use crate::{NetResult, ServerState};
+use crate::NetResult;
+use ferrumc_state::ServerState;
 use ferrumc_config::get_global_config;
 use tokio::net::TcpListener;
 use tracing::{debug, error, info, info_span, Instrument};

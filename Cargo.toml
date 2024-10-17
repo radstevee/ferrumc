@@ -25,6 +25,7 @@ members = [
     "src/lib/adapters/nbt", "src/lib/adapters/mca",
     "src/lib/commands",
     "src/tests",
+    "src/lib/state",
 ]
 
 #================== Lints ==================#
@@ -87,6 +88,7 @@ ferrumc-world = { path = "src/lib/world" }
 ferrumc-nbt = { path = "src/lib/adapters/nbt" }
 ferrumc-mca = { path = "src/lib/adapters/mca" }
 ferrumc-tests = { path = "src/tests" }
+ferrumc-state = { path = "src/lib/state" }
 
 
 # Asynchronous

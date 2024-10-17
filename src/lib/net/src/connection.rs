@@ -4,7 +4,8 @@ use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
 use tracing::{trace, warn};
 use ferrumc_net_codec::encode::{NetEncode, NetEncodeOpts};
-use crate::{handle_packet, NetResult, ServerState};
+use crate::{handle_packet, NetResult};
+use ferrumc_state::ServerState;
 use crate::packets::incoming::PacketSkeleton;
 
 #[derive(Clone)]

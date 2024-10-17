@@ -1,10 +1,11 @@
 use crate::packets::IncomingPacket;
-use crate::{NetResult, ServerState};
+use crate::NetResult;
+use ferrumc_state::ServerState;
 use ferrumc_events::infrastructure::Event;
 use ferrumc_macros::{packet, Event, NetDecode};
 use ferrumc_net_codec::net_types::var_int::VarInt;
 use std::sync::Arc;
-use tracing::{trace};
+use tracing::trace;
 
 #[derive(NetDecode, Debug)]
 #[packet(packet_id = 0x00, state = "handshake")]

@@ -20,3 +20,4 @@ ctor = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_derive = { workspace = true }
+ferrumc-state = { workspace = true }

@@ -9,19 +9,4 @@ pub mod server;
 pub type NetResult<T> = Result<T, errors::NetError>;
 
 
-pub struct ServerState {
-    pub universe: Universe
-}
-
-pub type GlobalState = Arc<ServerState>;
-
-impl ServerState {
-    pub fn new(universe: Universe) -> Self {
-        Self {
-            universe
-        }
-    }
-}
-
-
 bake_packet_registry!("\\src\\packets\\incoming");

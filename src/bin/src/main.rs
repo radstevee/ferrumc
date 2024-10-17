@@ -4,7 +4,7 @@
 use std::sync::Arc;
 use tracing::{error, info};
 use ferrumc_ecs::Universe;
-use ferrumc_net::ServerState;
+use ferrumc_state::ServerState;
 
 pub(crate)mod errors;
 mod packet_handlers;
