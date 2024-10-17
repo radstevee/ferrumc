@@ -89,6 +89,7 @@ ferrumc-nbt = { path = "src/lib/adapters/nbt" }
 ferrumc-mca = { path = "src/lib/adapters/mca" }
 ferrumc-tests = { path = "src/tests" }
 ferrumc-state = { path = "src/lib/state" }
+ferrumc-commands = { path = "src/lib/commands" }
 
 
 # Asynchronous
