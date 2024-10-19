@@ -2,7 +2,7 @@ use tokio::io::{BufReader};
 use std::sync::Arc;
 use tokio::net::tcp::{OwnedReadHalf, OwnedWriteHalf};
 use tokio::net::TcpStream;
-use tracing::{trace, warn};
+use tracing::{debug, trace, warn};
 use ferrumc_net_codec::encode::{NetEncode, NetEncodeOpts};
 use crate::{handle_packet, NetResult};
 use ferrumc_state::ServerState;
@@ -15,6 +15,7 @@ pub enum ConnectionState {
     Status,
     Login,
     Play,
+    Configuration
 }
 impl ConnectionState {
     pub fn as_str(&self) -> &'static str {
@@ -23,6 +24,7 @@ impl ConnectionState {
             ConnectionState::Status => "status",
             ConnectionState::Login => "login",
             ConnectionState::Play => "play",
+            ConnectionState::Configuration => "configuration"
         }
     }
 }
@@ -72,7 +74,10 @@ pub async fn handle_connection(state: Arc<ServerState>, tcp_stream: TcpStream) -
         .get_mut::<StreamReader>(entity)?;
 
     'recv: loop {
-        let mut packet_skele = PacketSkeleton::new(&mut reader.reader).await?;
+        let Ok(mut packet_skele) = PacketSkeleton::new(&mut reader.reader).await else {
+            warn!("Failed to read packet. Possibly connection closed.");
+            break 'recv;
+        };
 
         trace!("Received packet: {:?}", packet_skele);
 
@@ -91,6 +96,11 @@ pub async fn handle_connection(state: Arc<ServerState>, tcp_stream: TcpStream) -
             break 'recv;
         };
     }
+    
+    debug!("Connection closed for entity: {:?}", entity);
 
+    // Remove all components from the entity
+    state.universe.remove_all_components(entity);
+    
     Ok(())
 }

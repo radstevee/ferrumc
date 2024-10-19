@@ -6,7 +6,7 @@ use crate::NetResult;
 use ferrumc_state::ServerState;
 
 #[derive(Debug, NetDecode)]
-#[packet(packet_id = 0x00, state = "Login")]
+#[packet(packet_id = 0x00, state = "login")]
 pub struct LoginStartPacket {
     pub username: String,
     pub uuid: u128,
