@@ -7,6 +7,7 @@ mod net;
 mod profiling;
 mod registries_packets;
 mod static_loading;
+mod utils;
 
 #[proc_macro_attribute]
 pub fn profile(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -68,4 +69,9 @@ pub fn get_registry_entry(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn build_registry_packets(input: TokenStream) -> TokenStream {
     registries_packets::build_mapping(input)
+}
+
+#[proc_macro_derive(Deref)]
+pub fn deref(input: TokenStream) -> TokenStream {
+    utils::deref::deref(input)
 }

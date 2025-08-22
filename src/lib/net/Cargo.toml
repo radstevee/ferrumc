@@ -11,7 +11,7 @@ ferrumc-net-codec = { workspace = true }
 ferrumc-macros = { workspace = true }
 ferrumc-config = { workspace = true }
 bevy_ecs = { workspace = true }
-
+ferrumc-entities = { workspace = true }
 ferrumc-nbt = { workspace = true }
 ferrumc-core = { workspace = true }
 ferrumc-text = { workspace = true }

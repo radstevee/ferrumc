@@ -1,7 +1,7 @@
 use bevy_ecs::prelude::*;
 use ferrumc_core::entities::entity_kind::EntityKind;
 use ferrumc_core::transform::position::Position;
-use crate::bundles::*;
+use crate::{bundles::*, EntityType};
 use crate::spawner::SpawnBundleExt;
 
 /// Entity factory for spawning different types of entities
@@ -12,10 +12,10 @@ impl EntityFactory {
     /// Spawn an entity of the given kind at the specified position
     pub fn spawn_entity(
         commands: &mut Commands,
-        entity_kind: EntityKind,
+        entity_type: EntityType,
         position: Position,
     ) -> Option<Entity> {
-        match entity_kind.get_id() {
+        match entity_type.get_id() {
             ZOMBIE_ID => {
                 Some(commands.spawn(ZombieBundle::default().with_position(position)).id())
             }

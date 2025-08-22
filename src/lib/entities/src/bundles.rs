@@ -2,8 +2,6 @@ use crate::components::{AiComponent, Hostile, Movable, Zombie};
 use crate::spawner::SpawnBundleExt;
 use bevy_ecs::bundle::Bundle;
 use ferrumc_core::collisions::bounding_box::BoundingBox;
-use ferrumc_core::entities::entity_kind::EntityKind;
-use ferrumc_core::entities::health::Health;
 use ferrumc_core::transform::Transform;
 use ferrumc_core::transform::position::Position;
 use ferrumc_macros::get_registry_entry;

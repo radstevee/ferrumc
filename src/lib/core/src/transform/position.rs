@@ -3,7 +3,7 @@ use ferrumc_net_codec::net_types::network_position::NetworkPosition;
 use std::fmt::{Debug, Display, Formatter};
 use typename::TypeName;
 
-#[derive(TypeName, Component, Clone)]
+#[derive(TypeName, Component, Clone, Copy, Default)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
@@ -24,12 +24,6 @@ impl Position {
 }
 
 // Implementations:
-impl Default for Position {
-    fn default() -> Self {
-        Self::new(0.0, 0.0, 0.0)
-    }
-}
-
 impl From<(f64, f64, f64)> for Position {
     fn from((x, y, z): (f64, f64, f64)) -> Self {
         Self::new(x, y, z)
