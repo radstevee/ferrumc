@@ -1,23 +1,24 @@
 **/target
 .idea
-/src/net/NBT_CODEC.nbt
-/src/net/NBT_CODEC.zlib
-**/rustc-ice*
-.zed
-/data
-chunk.json
-dummyregion.mca
-config.toml
-import/*
-blocks.json
+.vscode
+/crates/lib/dummy_lib/Cargo.lock
 
-blockstates.json
+Cargo.lock
+config.toml
+.temp
+
+.etc/blocks.json
 
 flame.svg
 
-logs/
-newblocks.json
+.direnv
+result
+result-*
 
-.etc/*
-!.etc/blockmappings.bz2
-!.etc/nbt_codec.nbt
+profile.json.gz
+.DS_Store
+
+world/
+whitelist.txt
+
+logs/
