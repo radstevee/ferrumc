@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use bevy_ecs::prelude::*;
-use ferrumc_commands::{Command, CommandContext, CommandInput, Sender, ROOT_COMMAND};
+use ferrumc_commands::{Command, CommandContext, CommandInput, Sender, Suggestion, ROOT_COMMAND};
 use ferrumc_net::{
     connection::StreamWriter,
     packets::outgoing::command_suggestions::{CommandSuggestionsPacket, Match},
@@ -61,6 +61,46 @@ fn create_ctx(input: String, command: Option<Arc<Command>>, sender: Sender) -> C
     }
 }
 
+pub fn command_suggestions(input: String, sender: Sender) -> (Vec<Suggestion>, String) {
+    let command = find_command(input.clone());
+    let command_arg = input
+        .clone()
+        .strip_prefix(&format!(
+            "/{} ",
+            command.clone().map(|c| c.name).unwrap_or_default()
+        ))
+        .unwrap_or(&input)
+        .to_string();
+    let mut ctx = create_ctx(command_arg.clone(), command.clone(), sender);
+    let command_arg = command_arg.clone(); // ok borrow checker
+    let tokens = command_arg.split(" ").collect::<Vec<&str>>();
+    let Some(current_token) = tokens.last() else {
+        // whitespace
+        return (Vec::new(), String::new());
+    };
+
+    let mut suggestions = Vec::new();
+
+    if let Some(command) = command {
+        for arg in command.args.clone() {
+            let arg_suggestions = (arg.suggester)(&mut ctx);
+            ctx.input.skip_whitespace(u32::MAX, true);
+            if !ctx.input.has_remaining_input() {
+                suggestions = arg_suggestions;
+                break;
+            }
+        }
+    }
+
+    (
+        suggestions
+            .into_iter()
+            .filter(|sug| sug.content.starts_with(current_token))
+            .collect(),
+        current_token.to_string(),
+    )
+}
+
 pub fn handle(
     receiver: Res<CommandSuggestionRequestReceiver>,
     query: Query<&StreamWriter>,
@@ -72,36 +112,7 @@ pub fn handle(
         }
 
         let input = request.input;
-
-        let command = find_command(input.clone());
-        let command_arg = input
-            .clone()
-            .strip_prefix(&format!(
-                "/{} ",
-                command.clone().map(|c| c.name).unwrap_or_default()
-            ))
-            .unwrap_or(&input)
-            .to_string();
-        let mut ctx = create_ctx(command_arg.clone(), command.clone(), Sender::Player(entity));
-        let command_arg = command_arg.clone(); // ok borrow checker
-        let tokens = command_arg.split(" ").collect::<Vec<&str>>();
-        let Some(current_token) = tokens.last() else {
-            return; // whitespace
-        };
-
-        let mut suggestions = Vec::new();
-
-        if let Some(command) = command {
-            for arg in command.args.clone() {
-                let arg_suggestions = (arg.suggester)(&mut ctx);
-                ctx.input.skip_whitespace(u32::MAX, true);
-                if !ctx.input.has_remaining_input() {
-                    suggestions = arg_suggestions;
-                    break;
-                }
-            }
-        }
-
+        let (suggestions, current_token) = command_suggestions(input.clone(), Sender::Player(entity));
         let length = input.len();
         let start = length - current_token.len();
 
@@ -113,7 +124,6 @@ pub fn handle(
                 matches: LengthPrefixedVec::new(
                     suggestions
                         .into_iter()
-                        .filter(|sug| sug.content.starts_with(current_token))
                         .map(|sug| Match {
                             content: sug.content,
                             tooltip: PrefixedOptional::new(sug.tooltip),
