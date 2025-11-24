@@ -1,84 +1,68 @@
-use std::{
-    io::{stdout, Write},
-    time::Duration,
-};
+use std::{borrow::Cow, sync::LazyLock, thread};
 
-use bevy_ecs::{message::MessageWriter, resource::Resource, system::ResMut};
-use crossterm::{
-    cursor::MoveToColumn,
-    event,
-    style::{ResetColor, SetForegroundColor},
-    terminal::{BeginSynchronizedUpdate, Clear, EndSynchronizedUpdate},
-    ExecutableCommand,
-};
-use ferrumc_commands::{messages::CommandDispatched, Sender};
+use bevy_ecs::message::MessageWriter;
+use crossbeam_queue::SegQueue;
+use ferrumc_commands::{Sender, messages::CommandDispatched};
+use ferrumc_state::GlobalState;
+use ferrumc_text::{Color, NamedColor};
+use rustyline::{Completer, Editor, Helper, Validator, highlight::Highlighter, hint::Hinter};
+use tracing::info;
 
 use crate::packet_handlers::play_packets::command_suggestions;
 
-#[derive(Resource, Default)]
-pub struct CurrentInput(pub String);
+static QUEUE: LazyLock<crossbeam_queue::SegQueue<String>> = LazyLock::new(SegQueue::new);
 
-fn suggestion(input: &str) -> Option<String> {
-    let (suggestions, _) =
+fn suggestion(input: &str) -> Option<(String, String)> {
+    let (suggestions, tok) =
         command_suggestions::command_suggestions(input.to_string(), Sender::Server);
-    suggestions.get(0).map(|s| s.content.clone())
+    suggestions.get(0).map(|s| (s.content.clone(), tok))
 }
 
-fn redraw(input: &str) {
-    let sugg = suggestion(input);
-    let mut stdout = stdout();
+#[derive(Completer, Helper, Validator)]
+struct ConsoleHelper;
 
-    let _ = stdout.execute(BeginSynchronizedUpdate);
-    let _ = stdout.execute(Clear(crossterm::terminal::ClearType::CurrentLine));
-    let _ = stdout.execute(MoveToColumn(0));
-
-    print!("> {}", input);
-
-    if let Some(s) = sugg {
-        let remaining = &s[input.len()..];
-        let _ = stdout.execute(SetForegroundColor(crossterm::style::Color::DarkGrey));
-        print!("{remaining}");
-        let _ = stdout.execute(ResetColor);
+impl Highlighter for ConsoleHelper {
+    fn highlight_hint<'h>(&self, hint: &'h str) -> Cow<'h, str> {
+        Cow::Owned(format!("\x1b[0m{}{hint}\x1b[0m", Color::Named(NamedColor::DarkGray).to_ansi_color().expect("dark gray should have an ansi color")))
     }
-
-    // move cursor back to the position *after the real input*
-    let cursor_x = 2 + input.len() as u16; // "> " = 2 chars
-    let _ = stdout.execute(MoveToColumn(cursor_x));
-
-    let _ = stdout.execute(EndSynchronizedUpdate);
-    stdout.flush().expect("stdout flush failed");
 }
 
-pub fn console(mut writer: MessageWriter<CommandDispatched>, mut input: ResMut<CurrentInput>) {
-    let command = &mut input.0;
+impl Hinter for ConsoleHelper {
+    type Hint = String;
 
-    if !event::poll(Duration::from_millis(0)).unwrap_or(false) {
-        return;
+    fn hint(&self, line: &str, _pos: usize, _ctx: &rustyline::Context<'_>) -> Option<Self::Hint> {
+        let (suggestion, token) = suggestion(line)?;
+
+        Some(suggestion.strip_prefix(&token).unwrap_or(&suggestion).to_string())
     }
+}
 
-    if let Ok(event::Event::Key(key)) = event::read() {
-        match key.code {
-            event::KeyCode::Enter => {
-                writer.write(CommandDispatched {
-                    command: command.clone(),
-                    sender: Sender::Server,
-                });
-                command.clear();
+pub fn init_console(state: GlobalState) {
+    thread::spawn(move || {
+        let mut line = Editor::new().unwrap();
+        line.set_helper(Some(ConsoleHelper));
+
+        loop {
+            if let Ok(command) = line.readline("> ") {
+                QUEUE.push(command);
+            } else {
+                info!("Shutting down server...");
+                state
+                    .shut_down
+                    .store(true, std::sync::atomic::Ordering::Relaxed);
+                state
+                    .world
+                    .sync()
+                    .expect("Failed to sync world before shutdown");
+                break
             }
-            event::KeyCode::Char(c) => {
-                command.push(c);
-            }
-            event::KeyCode::Backspace => {
-                command.pop();
-            }
-            event::KeyCode::Tab | event::KeyCode::Right => {
-                if let Some(s) = suggestion(command) {
-                    *command = s;
-                }
-            }
-            _ => {}
         }
+    });
+}
 
-        redraw(command);
+pub fn console_sender(mut writer: MessageWriter<CommandDispatched>) {
+    while !QUEUE.is_empty() {
+        let entry = QUEUE.pop().unwrap();
+        writer.write(CommandDispatched { command: entry, sender: Sender::Server });
     }
 }

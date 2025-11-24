@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use bevy_ecs::prelude::*;
-use ferrumc_commands::{Command, CommandContext, CommandInput, Sender, Suggestion, ROOT_COMMAND};
+use ferrumc_commands::{
+    graph::node::CommandNodeType, infrastructure, Command, CommandContext, CommandInput, Sender,
+    Suggestion, ROOT_COMMAND,
+};
 use ferrumc_net::{
     connection::StreamWriter,
     packets::outgoing::command_suggestions::{CommandSuggestionsPacket, Match},
@@ -62,6 +65,10 @@ fn create_ctx(input: String, command: Option<Arc<Command>>, sender: Sender) -> C
 }
 
 pub fn command_suggestions(input: String, sender: Sender) -> (Vec<Suggestion>, String) {
+    if input.is_empty() {
+        return (Vec::new(), String::new());
+    }
+
     let command = find_command(input.clone());
     let command_arg = input
         .clone()
@@ -81,15 +88,40 @@ pub fn command_suggestions(input: String, sender: Sender) -> (Vec<Suggestion>, S
 
     let mut suggestions = Vec::new();
 
+    let graph = infrastructure::get_graph();
     if let Some(command) = command {
+        let mut subcommands = Vec::new();
+        graph.traverse(|node, _idx, _depth, parent| {
+            if let Some(parent) = parent {
+                if graph.get_command_name(parent) == command.name && node.node_type() == CommandNodeType::Literal {
+                    subcommands.push(node.name.clone().unwrap());
+                }
+            }
+        });
+        if !subcommands.is_empty() {
+            suggestions.extend(subcommands.into_iter().map(Suggestion::of).collect::<Vec<Suggestion>>());
+        }
+
         for arg in command.args.clone() {
             let arg_suggestions = (arg.suggester)(&mut ctx);
             ctx.input.skip_whitespace(u32::MAX, true);
             if !ctx.input.has_remaining_input() {
-                suggestions = arg_suggestions;
+                suggestions.extend(arg_suggestions);
                 break;
             }
         }
+    } else {
+        // otherwise, we just add all commands to the suggestions list,
+        // they're filtered on the input anyway
+        let mut nodes = infrastructure::get_graph()
+            .nodes
+            .iter()
+            .filter(|node| node.node_type() == CommandNodeType::Literal)
+            .map(|node| node.name.clone().expect("impossible to get root node"))
+            .collect::<Vec<String>>();
+
+        nodes.sort_by(|a, b| a.len().cmp(&b.len()));
+        suggestions = nodes.iter().map(Suggestion::of).collect();
     }
 
     (
@@ -112,7 +144,8 @@ pub fn handle(
         }
 
         let input = request.input;
-        let (suggestions, current_token) = command_suggestions(input.clone(), Sender::Player(entity));
+        let (suggestions, current_token) =
+            command_suggestions(input.clone(), Sender::Player(entity));
         let length = input.len();
         let start = length - current_token.len();
 

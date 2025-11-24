@@ -1,4 +1,6 @@
+pub mod command_resolver;
 pub mod connection_killer;
+pub mod console;
 mod cross_chunk_boundary;
 pub mod keep_alive_system;
 pub mod lan_pinger;
@@ -9,14 +11,12 @@ pub mod player_count_update;
 pub mod send_chunks;
 pub mod shutdown_systems;
 pub mod world_sync;
-pub mod command_resolver;
-pub mod console;
 
 pub fn register_game_systems(schedule: &mut bevy_ecs::schedule::Schedule) {
     // Tick-bound systems only (run every game tick)
     schedule.add_systems(new_connections::accept_new_connections);
     schedule.add_systems(cross_chunk_boundary::cross_chunk_boundary);
-    schedule.add_systems(console::console);
+    schedule.add_systems(console::console_sender);
     schedule.add_systems(command_resolver::command_resolver);
     schedule.add_systems(mq::process);
 

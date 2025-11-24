@@ -47,7 +47,8 @@ tokio = { workspace = true, features = ["full"] }
 crossbeam-channel = { workspace = true }
 uuid = { workspace = true }
 dhat = { workspace = true }
-crossterm = { workspace = true }
+rustyline = { workspace = true }
+crossbeam-queue = { workspace = true }
 
 [features]
 dhat = []

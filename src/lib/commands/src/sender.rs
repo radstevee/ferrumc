@@ -3,7 +3,6 @@
 use bevy_ecs::prelude::*;
 use ferrumc_core::mq;
 use ferrumc_text::TextComponent;
-use tracing::info;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 /// A possible command sender.
@@ -22,7 +21,7 @@ impl Sender {
         match self {
             Sender::Player(entity) => mq::queue(message, actionbar, *entity),
             Sender::Server => {
-                info!("{message}"); // TODO: serialize into ANSI?
+                println!("{}", message.to_ansi_string()); // Tracing prints it as Debug meaning ANSI escape codes don't work
             }
         }
     }

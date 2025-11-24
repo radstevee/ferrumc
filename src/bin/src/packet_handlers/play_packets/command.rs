@@ -1,8 +1,5 @@
 use bevy_ecs::prelude::*;
-use ferrumc_commands::{
-    messages::CommandDispatched,
-    Sender,
-};
+use ferrumc_commands::{messages::CommandDispatched, Sender};
 use ferrumc_net::ChatCommandPacketReceiver;
 
 pub fn handle(

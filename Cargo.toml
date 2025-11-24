@@ -214,7 +214,7 @@ moka = "0.12.11"
 clap = "4.5.49"
 indicatif = "0.18.0"
 colored = "3.0.0"
-crossterm = "0.28"
+rustyline = { version = "17.0.2", features = ["derive"] }
 
 # Misc
 deepsize = "0.2.0"

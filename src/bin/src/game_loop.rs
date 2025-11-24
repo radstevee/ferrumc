@@ -2,6 +2,7 @@ use crate::errors::BinaryError;
 use crate::packet_handlers::{play_packets, register_player_systems};
 use crate::register_messages::register_messages;
 use crate::register_resources::register_resources;
+use crate::systems::console::init_console;
 use crate::systems::lan_pinger::LanPinger;
 use crate::systems::listeners::register_gameplay_listeners;
 use crate::systems::register_game_systems;
@@ -238,6 +239,7 @@ fn tcp_conn_acceptor(
                             "Failed to create TCP listener".to_string(),
                         ));
                     };
+                    init_console(state.clone());
                     while !state.shut_down.load(std::sync::atomic::Ordering::Relaxed) {
                         // Wait for a new connection or shutdown signal
                         tokio::select! {
